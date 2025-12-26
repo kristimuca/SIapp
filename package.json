@@ -1,0 +1,36 @@
+{
+  "name": "text-encryption-app",
+  "version": "1.0.0",
+  "description": "Text Encryption Web App - Full Stack Application",
+  "scripts": {
+    "install-all": "npm --prefix backend install && npm --prefix frontend install",
+    "start": "concurrently \"npm run start-backend\" \"npm run start-frontend\" --names \"BACKEND,FRONTEND\" --prefix-colors \"green,blue\"",
+    "start-backend": "npm --prefix backend run dev",
+    "start-frontend": "npm --prefix frontend start",
+    "dev": "npm run start",
+    "test": "npm --prefix backend test && npm --prefix frontend test -- --watchAll=false",
+    "test-backend": "npm --prefix backend test",
+    "test-frontend": "npm --prefix frontend test -- --watchAll=false",
+    "docker-up": "docker-compose up --build",
+    "docker-down": "docker-compose down",
+    "docker-logs": "docker-compose logs -f",
+    "setup": "npm install && npm run install-all"
+  },
+  "repository": {
+    "type": "git",
+    "url": "text-encryption-app"
+  },
+  "keywords": [
+    "encryption",
+    "aes",
+    "cryptography",
+    "react",
+    "express",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
