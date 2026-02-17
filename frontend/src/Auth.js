@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
 import './Auth.css';
-import { FaGoogle } from 'react-icons/fa';
 
 export const Login = ({ onToggleMode, onClose }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, loginWithGoogle } = useAuth();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,20 +19,6 @@ export const Login = ({ onToggleMode, onClose }) => {
       onClose();
     } catch (err) {
       setError(err.message || 'Failed to log in');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    setError('');
-    setLoading(true);
-
-    try {
-      await loginWithGoogle();
-      onClose();
-    } catch (err) {
-      setError(err.message || 'Failed to log in with Google');
     } finally {
       setLoading(false);
     }
@@ -72,16 +57,6 @@ export const Login = ({ onToggleMode, onClose }) => {
         </button>
       </form>
 
-      <div className="divider">OR</div>
-
-      <button 
-        onClick={handleGoogleLogin} 
-        className="btn btn-google"
-        disabled={loading}
-      >
-        <FaGoogle /> Continue with Google
-      </button>
-
       <p className="toggle-mode">
         Don't have an account?{' '}
         <button onClick={onToggleMode} className="link-btn">Sign up</button>
@@ -96,7 +71,7 @@ export const Signup = ({ onToggleMode, onClose }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signup, loginWithGoogle } = useAuth();
+  const { signup } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -117,20 +92,6 @@ export const Signup = ({ onToggleMode, onClose }) => {
       onClose();
     } catch (err) {
       setError(err.message || 'Failed to create account');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleSignup = async () => {
-    setError('');
-    setLoading(true);
-
-    try {
-      await loginWithGoogle();
-      onClose();
-    } catch (err) {
-      setError(err.message || 'Failed to sign up with Google');
     } finally {
       setLoading(false);
     }
@@ -180,16 +141,6 @@ export const Signup = ({ onToggleMode, onClose }) => {
           {loading ? 'Creating account...' : 'Sign Up'}
         </button>
       </form>
-
-      <div className="divider">OR</div>
-
-      <button 
-        onClick={handleGoogleSignup} 
-        className="btn btn-google"
-        disabled={loading}
-      >
-        <FaGoogle /> Continue with Google
-      </button>
 
       <p className="toggle-mode">
         Already have an account?{' '}

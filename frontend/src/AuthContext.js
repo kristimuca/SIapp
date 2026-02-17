@@ -4,8 +4,6 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  GoogleAuthProvider,
-  signInWithPopup,
   sendPasswordResetEmail,
 } from 'firebase/auth';
 import { auth } from './firebase';
@@ -69,28 +67,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Sign in with Google
-  const loginWithGoogle = async () => {
-    try {
-      setError(null);
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      
-      // Create/update user profile in backend
-      const token = await result.user.getIdToken();
-      await axios.post(
-        `${process.env.REACT_APP_API_URL}/user/profile`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      return result;
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    }
-  };
-
   // Sign out
   const logout = async () => {
     try {
@@ -136,7 +112,6 @@ export const AuthProvider = ({ children }) => {
     error,
     signup,
     login,
-    loginWithGoogle,
     logout,
     resetPassword,
     getToken,

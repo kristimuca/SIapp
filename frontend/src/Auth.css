@@ -9,7 +9,7 @@
 .auth-form h2 {
   text-align: center;
   margin-bottom: 25px;
-  color: #00dd00;
+  color: #56b870;
   font-size: 28px;
 }
 
@@ -20,14 +20,14 @@
 .auth-form label {
   display: block;
   margin-bottom: 8px;
-  color: #00dd00;
+  color: #56b870;
   font-weight: 500;
 }
 
 .auth-form input {
   width: 100%;
   padding: 12px;
-  border: 2px solid #00dd00;
+  border: 2px solid #56b870;
   border-radius: 8px;
   font-size: 16px;
   transition: all 0.3s;
@@ -42,8 +42,8 @@
 
 .auth-form input:focus {
   outline: none;
-  border-color: #00dd00;
-  box-shadow: 0 0 8px #00dd00;
+  border-color: #56b870;
+  box-shadow: 0 0 6px rgba(86, 184, 112, 0.55);
 }
 
 .auth-form input:disabled {
@@ -69,27 +69,14 @@
 }
 
 .auth-form .btn-primary {
-  background: #00dd00;
+  background: #56b870;
   color: #000000;
-  border: 2px solid #00dd00;
+  border: 2px solid #56b870;
 }
 
 .auth-form .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 0 15px #00dd00;
-}
-
-.auth-form .btn-google {
-  background: transparent;
-  color: #00dd00;
-  border: 2px solid #00dd00;
-  margin-top: 0;
-}
-
-.auth-form .btn-google:hover:not(:disabled) {
-  background: #00dd00;
-  color: #000000;
-  box-shadow: 0 0 12px #00dd00;
+  box-shadow: 0 0 9px rgba(86, 184, 112, 0.65);
 }
 
 .auth-form .btn:disabled {
@@ -101,7 +88,7 @@
 .auth-form .divider {
   text-align: center;
   margin: 25px 0;
-  color: #00dd00;
+  color: #56b870;
   position: relative;
   opacity: 0.7;
 }
@@ -113,7 +100,7 @@
   top: 50%;
   width: 40%;
   height: 1px;
-  background: #00dd00;
+  background: #56b870;
   opacity: 0.3;
 }
 
@@ -128,14 +115,14 @@
 .auth-form .toggle-mode {
   text-align: center;
   margin-top: 20px;
-  color: #00dd00;
+  color: #56b870;
   opacity: 0.8;
 }
 
 .auth-form .link-btn {
   background: none;
   border: none;
-  color: #00dd00;
+  color: #56b870;
   cursor: pointer;
   font-weight: 600;
   text-decoration: underline;

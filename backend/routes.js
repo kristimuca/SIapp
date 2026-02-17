@@ -1,8 +1,9 @@
 const express = require('express');
-const { body, validationResult } = require('express-validator');
+const { body, validationResult, query } = require('express-validator');
 const EncryptionService = require('./encryptionService');
 const { authMiddleware, optionalAuthMiddleware } = require('./authMiddleware');
 const databaseService = require('./databaseService');
+const { encryptionLimiter, decryptionLimiter, authLimiter, historyLimiter } = require('./rateLimiter');
 
 const router = express.Router();
 const encryptionService = new EncryptionService();
@@ -42,6 +43,7 @@ router.get('/test-firestore', async (req, res) => {
  */
 router.post(
   '/encrypt',
+  encryptionLimiter,
   optionalAuthMiddleware,
   [
     body('plaintext')
@@ -70,6 +72,17 @@ router.post(
       // Encrypt the plaintext
       const encryptedData = encryptionService.encrypt(plaintext);
 
+      // Generate portable string
+      const portableString = encryptionService.encodeToPortableString(encryptedData);
+
+      // Log audit event
+      if (req.user) {
+        await databaseService.logAuditEvent('encrypt', req.user.uid, {
+          titleLength: plaintext.length,
+          hasTitle: !!title,
+        });
+      }
+
       // Save to history if user is authenticated and wants to save
       let historyId = null;
       if (req.user && saveToHistory !== false) {
@@ -96,6 +109,7 @@ router.post(
         success: true,
         data: {
           ...encryptedData,
+          portableString,
           historyId,
         }
       });
@@ -117,19 +131,13 @@ router.post(
  */
 router.post(
   '/decrypt',
+  decryptionLimiter,
+  optionalAuthMiddleware,
   [
-    body('ciphertext')
-      .isString()
-      .notEmpty()
-      .withMessage('Ciphertext is required and must be a string'),
-    body('iv')
-      .isString()
-      .notEmpty()
-      .withMessage('IV is required and must be a string'),
-    body('authTag')
-      .isString()
-      .notEmpty()
-      .withMessage('Authentication tag is required and must be a string')
+    body('ciphertext').optional().isString(),
+    body('iv').optional().isString(),
+    body('authTag').optional().isString(),
+    body('portableString').optional().isString(),
   ],
   (req, res) => {
     try {
@@ -142,10 +150,33 @@ router.post(
         });
       }
 
-      const { ciphertext, iv, authTag } = req.body;
+      let encryptedData;
+
+      // Support both portable string and individual fields
+      if (req.body.portableString) {
+        encryptedData = encryptionService.decodeFromPortableString(req.body.portableString);
+      } else {
+        const { ciphertext, iv, authTag, keyVersion } = req.body;
+        
+        if (!ciphertext || !iv || !authTag) {
+          return res.status(400).json({
+            success: false,
+            message: 'Either portableString or (ciphertext, iv, authTag) must be provided'
+          });
+        }
+
+        encryptedData = { ciphertext, iv, authTag, keyVersion };
+      }
 
       // Decrypt the ciphertext
-      const plaintext = encryptionService.decrypt({ ciphertext, iv, authTag });
+      const plaintext = encryptionService.decrypt(encryptedData);
+
+      // Log audit event
+      if (req.user) {
+        databaseService.logAuditEvent('decrypt', req.user.uid, {
+          keyVersion: encryptedData.keyVersion,
+        });
+      }
 
       res.json({
         success: true,
@@ -169,10 +200,15 @@ router.post(
  * @desc    Get user's encryption history
  * @access  Private
  */
-router.get('/history', authMiddleware, async (req, res) => {
+router.get('/history', historyLimiter, authMiddleware, async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 50;
     const history = await databaseService.getEncryptionHistory(req.user.uid, limit);
+    
+    // Log audit event
+    await databaseService.logAuditEvent('history_read', req.user.uid, {
+      resultCount: history.length,
+    });
     
     res.json({
       success: true,
@@ -190,11 +226,93 @@ router.get('/history', authMiddleware, async (req, res) => {
 });
 
 /**
+ * @route   GET /api/history/search
+ * @desc    Search/filter user's encryption history
+ * @access  Private
+ */
+router.get('/history/search', historyLimiter, authMiddleware, [
+  query('searchTitle').optional().isString(),
+  query('startDate').optional().isISO8601(),
+  query('endDate').optional().isISO8601(),
+  query('limit').optional().isInt({ min: 1, max: 200 }),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+
+    const options = {
+      searchTitle: req.query.searchTitle || '',
+      startDate: req.query.startDate || null,
+      endDate: req.query.endDate || null,
+      limit: parseInt(req.query.limit) || 50,
+    };
+
+    const history = await databaseService.getEncryptionHistoryFiltered(req.user.uid, options);
+    
+    // Log audit event
+    await databaseService.logAuditEvent('history_search', req.user.uid, {
+      searchTitle: options.searchTitle,
+      resultCount: history.length,
+    });
+    
+    res.json({
+      success: true,
+      data: history,
+      count: history.length,
+    });
+  } catch (error) {
+    console.error('History search error:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to search history',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @route   GET /api/history/export
+ * @desc    Export user's entire encryption history as JSON
+ * @access  Private
+ */
+router.get('/history/export', historyLimiter, authMiddleware, async (req, res) => {
+  try {
+    const history = await databaseService.getEncryptionHistory(req.user.uid, 1000);
+    
+    // Log audit event
+    await databaseService.logAuditEvent('history_export', req.user.uid, {
+      recordCount: history.length,
+    });
+    
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="encryption-history-${Date.now()}.json"`);
+    res.json({
+      exportDate: new Date().toISOString(),
+      userId: req.user.uid,
+      recordCount: history.length,
+      data: history,
+    });
+  } catch (error) {
+    console.error('History export error:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to export history',
+      error: error.message
+    });
+  }
+});
+
+/**
  * @route   GET /api/history/:id
  * @desc    Get specific encryption from history
  * @access  Private
  */
-router.get('/history/:id', authMiddleware, async (req, res) => {
+router.get('/history/:id', historyLimiter, authMiddleware, async (req, res) => {
   try {
     const encryption = await databaseService.getEncryption(req.params.id, req.user.uid);
     
@@ -346,12 +464,17 @@ router.get('/shared/:shareId', async (req, res) => {
  * @desc    Create/update user profile
  * @access  Private
  */
-router.post('/user/profile', authMiddleware, async (req, res) => {
+router.post('/user/profile', authLimiter, authMiddleware, async (req, res) => {
   try {
     await databaseService.createUser(req.user.uid, {
       email: req.user.email,
       emailVerified: req.user.emailVerified,
       lastLogin: new Date().toISOString(),
+    });
+
+    // Log audit event
+    await databaseService.logAuditEvent('profile_update', req.user.uid, {
+      email: req.user.email,
     });
 
     res.json({

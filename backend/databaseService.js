@@ -9,6 +9,7 @@ class DatabaseService {
       users: 'users',
       encryptions: 'encryptions',
       sharedMessages: 'sharedMessages',
+      auditLogs: 'auditLogs',
     };
   }
 
@@ -55,6 +56,7 @@ class DatabaseService {
         ciphertext: encryptionData.ciphertext,
         iv: encryptionData.iv,
         authTag: encryptionData.authTag,
+        keyVersion: encryptionData.keyVersion || 1,
         originalLength: encryptionData.originalLength || 0,
         title: encryptionData.title || 'Untitled',
         description: encryptionData.description || '',
@@ -201,6 +203,68 @@ class DatabaseService {
       return { id: doc.id, ...data };
     } catch (error) {
       throw new Error(`Failed to get shared message: ${error.message}`);
+    }
+  }
+
+  /**
+   * Log audit event
+   */
+  async logAuditEvent(eventType, userId, metadata = {}) {
+    try {
+      const auditRef = db.collection(this.collections.auditLogs).doc();
+      await auditRef.set({
+        eventType, // 'encrypt', 'decrypt', 'login', 'signup', 'history_read', etc.
+        userId: userId || 'anonymous',
+        metadata,
+        timestamp: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+      });
+      return { success: true };
+    } catch (error) {
+      // Don't throw - audit logging should not break main flow
+      console.error('Failed to log audit event:', error.message);
+      return { success: false };
+    }
+  }
+
+  /**
+   * Get encryption history with search/filter support
+   */
+  async getEncryptionHistoryFiltered(uid, options = {}) {
+    try {
+      const { limit = 50, searchTitle = '', startDate = null, endDate = null } = options;
+      
+      let query = db.collection(this.collections.encryptions)
+        .where('userId', '==', uid);
+
+      // Apply date filters if provided
+      if (startDate) {
+        query = query.where('createdAt', '>=', startDate);
+      }
+      if (endDate) {
+        query = query.where('createdAt', '<=', endDate);
+      }
+
+      const snapshot = await query.limit(limit * 2).get(); // Fetch more for client-side filtering
+
+      let history = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        // Client-side title search
+        if (!searchTitle || data.title?.toLowerCase().includes(searchTitle.toLowerCase())) {
+          history.push({ id: doc.id, ...data });
+        }
+      });
+
+      // Sort by createdAt descending
+      history.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      // Apply limit after filtering
+      history = history.slice(0, limit);
+
+      return history;
+    } catch (error) {
+      throw new Error(`Failed to get filtered encryption history: ${error.message}`);
     }
   }
 }
