@@ -12,11 +12,12 @@ const api = axios.create({
 /**
  * Encrypt plaintext
  * @param {string} plaintext - Text to encrypt
+ * @param {object} options - Optional settings (title, description, saveToHistory)
  * @returns {Promise} Encrypted data
  */
-export const encryptText = async (plaintext) => {
+export const encryptText = async (plaintext, options = {}) => {
   try {
-    const response = await api.post('/encrypt', { plaintext });
+    const response = await api.post('/encrypt', { plaintext, ...options });
     return response.data;
   } catch (error) {
     throw error.response?.data || error.message;

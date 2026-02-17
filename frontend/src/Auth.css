@@ -1,0 +1,196 @@
+.auth-form {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 30px;
+  background: transparent;
+  border-radius: 12px;
+}
+
+.auth-form h2 {
+  text-align: center;
+  margin-bottom: 25px;
+  color: #00dd00;
+  font-size: 28px;
+}
+
+.auth-form .form-group {
+  margin-bottom: 20px;
+}
+
+.auth-form label {
+  display: block;
+  margin-bottom: 8px;
+  color: #00dd00;
+  font-weight: 500;
+}
+
+.auth-form input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #00dd00;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.3s;
+  box-sizing: border-box;
+  background: #000000;
+  color: #ffffff;
+}
+
+.auth-form input::placeholder {
+  color: #666666;
+}
+
+.auth-form input:focus {
+  outline: none;
+  border-color: #00dd00;
+  box-shadow: 0 0 8px #00dd00;
+}
+
+.auth-form input:disabled {
+  background: #1a1a1a;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.auth-form .btn {
+  width: 100%;
+  padding: 14px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.auth-form .btn-primary {
+  background: #00dd00;
+  color: #000000;
+  border: 2px solid #00dd00;
+}
+
+.auth-form .btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px #00dd00;
+}
+
+.auth-form .btn-google {
+  background: transparent;
+  color: #00dd00;
+  border: 2px solid #00dd00;
+  margin-top: 0;
+}
+
+.auth-form .btn-google:hover:not(:disabled) {
+  background: #00dd00;
+  color: #000000;
+  box-shadow: 0 0 12px #00dd00;
+}
+
+.auth-form .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.auth-form .divider {
+  text-align: center;
+  margin: 25px 0;
+  color: #00dd00;
+  position: relative;
+  opacity: 0.7;
+}
+
+.auth-form .divider::before,
+.auth-form .divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: #00dd00;
+  opacity: 0.3;
+}
+
+.auth-form .divider::before {
+  left: 0;
+}
+
+.auth-form .divider::after {
+  right: 0;
+}
+
+.auth-form .toggle-mode {
+  text-align: center;
+  margin-top: 20px;
+  color: #00dd00;
+  opacity: 0.8;
+}
+
+.auth-form .link-btn {
+  background: none;
+  border: none;
+  color: #00dd00;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.auth-form .link-btn:hover {
+  opacity: 0.8;
+}
+
+.error-message {
+  background: rgba(255, 0, 0, 0.1);
+  color: #ff0000;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #ff0000;
+}
+
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  position: relative;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #f5f5f5;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.modal-close:hover {
+  background: #e0e0e0;
+}
